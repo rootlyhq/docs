@@ -1,0 +1,44 @@
+{
+  "title": "Rootly Agent: actions users asked for that the agent did not allow (homepage redesign input)",
+  "is_incident": false,
+  "severity": "none",
+  "status": "investigated",
+  "kind": "data_investigation",
+  "symptom": "Users ask Rootly Agent to take actions (update/resolve incidents, page people, declare incidents, write retros, Slack channel actions) and the agent replies that it can't. No outage; this is a capability gap measured for the homepage redesign.",
+  "affected_surface": "Rootly Agent chat: Slack, web incident chat (mostly read-only), web home chat, mobile, Microsoft Teams, Google Chat, API",
+  "timeline": [
+    {"t": "2026-08-14", "event": "Earliest ai_sessions / ai_session_messages data on chat surfaces in the 90-day window"},
+    {"t": "2026-10-29", "event": "ai_tool_call_events starts recording tool-level outcomes (denied, permission_denied, held)"},
+    {"t": "2026-11-11T21:56:31Z", "event": "Homepage redesign kickoff follow-up in #proj-homepage-redesign asks for numbers on actions users asked for that the agent did not allow"},
+    {"t": "2026-11-12", "event": "Lane pulled the numbers from Metabase (Main DB); Braintrust queries were blocked by the read-only hook; ranked report published at tmp/soil/report.html"}
+  ],
+  "requested_in": "https://rootly-workspace.slack.com/archives/C0BJWDHTDF1/p1794431791829139",
+  "summary": "Not a production incident. Kickoff follow-up for the homepage redesign: pull numbers on actions users asked Rootly Agent to do that it would not or could not do. Paying non-sandbox teams, chat surfaces, last 90 days: at least 268 action requests were refused. The flag's precision is about 80% (41 of 50 sampled); recall was not measured. Ranked by teams refused: update incident (34), Slack channel/bridge actions (30), send/post message (27), page/escalate (25), retrospective create/fill/publish (25), declare incident (21), external tickets (14). Web chat refuses incident updates, paging and retros at 33%, 40% and 60%; the reason given is that web is read-only. Home chat has no tools for declare incident, paging, status page, retros, Slack channel actions or Jira.",
+  "triage": {
+    "source": {
+      "repo": "rootlyhq/rootly (attached read-only at /workspace/attached/rootly, master e2b4c9c158)",
+      "findings": [
+        "No structured refusal tag exists: guardrail and 'no tool for that' replies are plain assistant text (config/ai/guardrails.yml).",
+        "Tool-level denials are recorded in ai_tool_call_events.outcome (denied, permission_denied, held) via app/services/ai/tool_calls/recorder.rb.",
+        "Home chat write tools: app/services/ai/tools/home_write_allowlist.rb. It excludes create incident, paging, status page, retros, Slack channel actions and Jira; incident updates only behind the enable_ai_assistant_required_fields_v2 flag."
+      ]
+    },
+    "deploys": "not_applicable: no regression or outage is being investigated",
+    "ci": "not_applicable: no code change in this lane",
+    "observability": {
+      "metabase": "available; all numbers come from Main DB (id 2): ai_session_messages, ai_sessions, ai_tool_call_events, ai_pending_checkpoints, ai_allowed_tools",
+      "braintrust": "blocked: sql_query and infer_schema refused by the lane's read-only hook; no Braintrust numbers used or estimated",
+      "datadog": "not queried: [Ai::CapabilityMissing] logs cover agent-disabled and failed turns, not action refusals",
+      "sentry": "not_applicable"
+    }
+  },
+  "data_gaps": [
+    "Braintrust queries blocked by read-only hook (same as operator session).",
+    "No structured refusal tag; counts come from text classification and are lower bounds.",
+    "ai_tool_call_events only has data from 2026-10-29.",
+    "ai_pending_checkpoints has no tool column, so the 1,119 expired confirmations (all teams, 90d) cannot be ranked by action.",
+    "Some totals (23.7k sessions, checkpoints) include internal and QA teams; the ranked table is limited to paying teams."
+  ],
+  "deliverable": "tmp/soil/report.html",
+  "customer_impact": "none"
+}

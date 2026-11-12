@@ -1,0 +1,7 @@
+[
+  {"id": "h1", "hypothesis": "Home chat refuses most action requests because app/services/ai/tools/home_write_allowlist.rb omits the write tools for declare incident, paging/escalation, status page, retrospectives, Slack channel actions and Jira, so the model has no tool to call and answers in plain text that it can't."},
+  {"id": "h2", "hypothesis": "Web incident chat refuses incident updates, paging and retros (33%/40%/60%) because that surface is deliberately read-only: write tools are filtered out of the surface's tool set (ai_allowed_tools / surface config) and the system prompt tells the model to say web is read-only."},
+  {"id": "h3", "hypothesis": "Incident-update refusals (the top category, 34 teams) come mainly from the enable_ai_assistant_required_fields_v2 LaunchDarkly flag being off for most paying teams, which keeps the incident update tool out of the agent's tool set."},
+  {"id": "h4", "hypothesis": "A large share of refusals are tool-level denials rather than missing tools: the tool exists but the requesting user lacks the Rootly role/permission, or the confirmation checkpoint expires, recorded as ai_tool_call_events.outcome denied/permission_denied/held and the 1,119 expired ai_pending_checkpoints."},
+  {"id": "h5", "hypothesis": "Some refusals are false 'can't do that' replies from the guardrails in config/ai/guardrails.yml (off-topic and empty-context rules) firing on legitimate action requests, so the agent declines even when a matching tool is available on that surface."}
+]

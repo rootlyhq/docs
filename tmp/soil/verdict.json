@@ -1,0 +1,250 @@
+{
+  "decision": "accept — no action",
+  "decided_at": "2026-11-12T12:03:05.949Z",
+  "impact": "No outage: over 90 days the Rootly Agent gave paying teams a final reply without refusing to 90% of their asks, but handed 27.5% of web asks back to the user, against 8.8% in Slack.",
+  "severity": "sev4",
+  "scope": {
+    "users": "3,155 users across 397 paying teams had an agent session in 90 days; 21,403 user messages on chat surfaces",
+    "requests": "Tier 3 (handed back) 1,994 of 21,403 asks (9.3%); web 432 of 1,573 (27.5%); Slack 1,472 of 16,643 (8.8%); mobile 73 of 2,988 (2.4%)",
+    "slo": "not applicable: product sizing, not an availability or latency SLO",
+    "revenue": "unknown"
+  },
+  "executive_summary": "The data pack for the homepage redesign is published as a purple, light and dark artifact: https://claude.ai/code/artifact/9347689e-bea8-4593-b86b-a62b70c88d40. Across 21,403 asks from paying teams in 90 days, the agent gave a final reply without refusing to 89.9% (Tier 1, an upper bound because there is no resolution feedback), pointed to docs for 0.78% (Tier 2) and handed back 9.3% (Tier 3). Web, where the homepage will live, hands back 27.5% of asks, mostly because web chat has no incident-update, paging or retro tools. Guardrails and the parity flag were checked and are not material causes. The proposed KR is at least 85% resolved, measured by a real resolution signal; Tier 2 used for config and admin questions; and at most 9% handed back on the homepage (Slack's level), with 5% as a stretch. Braintrust log data and homepage traffic by persona are still missing.",
+  "leading_hypothesis": "h6",
+  "root_cause": "Web chat offers most users only read-only tools, so it hands back incident-update, paging and retro asks that Slack completes, and the agent rarely links help-center docs, which leaves Tier 2 almost empty.",
+  "trigger": "No incident trigger: the homepage redesign kickoff asked for data to size a 3-tier KR before the agent moves from the incident page to a global component.",
+  "detection": "Measured on request with text rules over ai_session_messages; there is no structured refusal tag or resolution feedback, so no dashboard tracks tier rates today.",
+  "resolution": "Data pack published; the KR targets and the web write-tool scope are product decisions still to make.",
+  "five_whys": [
+    "More than one in four web asks to the agent ends with the work handed back to the user.",
+    "Web chat refuses incident updates, paging and retros that Slack completes.",
+    "Web chat keeps only READ_ONLY_TOOLS unless the user passes home-chat gating, and even then it has no incident-update, paging or retro tool.",
+    "Write access on web was scoped to the early home-chat rollout and never extended to incident-level actions.",
+    "The scope of web write tools for the global agent is a product decision the homepage redesign has to make now."
+  ],
+  "signals": [
+    {
+      "label": "Answered (Tier 1 upper bound)",
+      "value": "89.9%",
+      "note": "19,242 of 21,403 asks; only 48 explicit corrections in 2,112 follow-ups",
+      "tone": "good"
+    },
+    {
+      "label": "Web handback (Tier 3)",
+      "value": "27.5%",
+      "note": "vs 8.8% in Slack and 2.4% on mobile",
+      "tone": "bad"
+    },
+    {
+      "label": "Docs / self-serve (Tier 2)",
+      "value": "0.78%",
+      "note": "167 asks; the agent rarely links help-center docs",
+      "tone": "warn"
+    },
+    {
+      "label": "Time to final reply, p50",
+      "value": "8.8s",
+      "note": "p95 37s; web 8.5s, Slack 9.3s",
+      "tone": "neutral"
+    }
+  ],
+  "breakdown": {
+    "title": "Web hands back three times as many asks as Slack",
+    "caption": "Share of user messages by tier and surface, paying teams, last 90 days",
+    "unit": "%",
+    "rows": [
+      {
+        "label": "Web",
+        "emphasis": true,
+        "total": "1,573 asks",
+        "segments": [
+          {
+            "label": "Tier 1 answered",
+            "value": 72.2,
+            "tone": "neutral"
+          },
+          {
+            "label": "Tier 2 docs",
+            "value": 0.3,
+            "tone": "warn"
+          },
+          {
+            "label": "Tier 3 handed back",
+            "value": 27.5,
+            "tone": "bad"
+          }
+        ]
+      },
+      {
+        "label": "Slack (control)",
+        "emphasis": false,
+        "total": "16,643 asks",
+        "segments": [
+          {
+            "label": "Tier 1 answered",
+            "value": 90.2,
+            "tone": "good"
+          },
+          {
+            "label": "Tier 2 docs",
+            "value": 0.9,
+            "tone": "warn"
+          },
+          {
+            "label": "Tier 3 handed back",
+            "value": 8.8,
+            "tone": "bad"
+          }
+        ]
+      },
+      {
+        "label": "Mobile",
+        "emphasis": false,
+        "total": "2,988 asks",
+        "segments": [
+          {
+            "label": "Tier 1 answered",
+            "value": 97.6,
+            "tone": "good"
+          },
+          {
+            "label": "Tier 2 docs",
+            "value": 0,
+            "tone": "warn"
+          },
+          {
+            "label": "Tier 3 handed back",
+            "value": 2.4,
+            "tone": "bad"
+          }
+        ]
+      }
+    ],
+    "footnote": "Each ask is paired with the agent's final text reply in that turn (JSON tool-call rows skipped). Tiers come from text rules (refusal rule ~80% precision on a 50-message sample); Tier 1 is replies that did not refuse or fail, not confirmed resolutions."
+  },
+  "confidence": "medium",
+  "remediation": "keep monitoring",
+  "actions": [
+    "Share the artifact with Nour and #proj-homepage-redesign; it is private until shared from its Share menu.",
+    "Decide the KR targets per tier (proposed: at least 85% resolved, Tier 2 for config and admin asks, at most 9% handed back on the homepage with a 5% stretch).",
+    "Decide which write actions (incident update/resolve, paging, retros, declare) the global agent gets on web, then open the rootlyhq/rootly PR for them.",
+    "Turn on Braintrust log reads for this automation on rootly-prod-agent, then add trace-level intents, model latency, cost and quality scores to the artifact.",
+    "Find the source of the PRD's homepage traffic numbers (27.8k views / 30 days, 23% of active users); ahoy_events in Main DB is empty.",
+    "Add a resolution signal and a structured refusal tag so the tiers can be tracked as metrics.",
+    "Trace why the Tier 3 rate fell to 3-5% for the weeks of Sep 21 to Oct 5 on both Slack and web, then returned to 8-10%."
+  ],
+  "humanActions": [
+    {
+      "kind": "decision",
+      "action": "Set the homepage agent KR targets per tier and the web write-tool scope",
+      "target": "Homepage redesign PRD (Notion: Draft Homepage Redesign), owners Nour and John",
+      "why": "Tier 3 on web is 27.5% vs 8.8% in Slack; the target depends on which write tools web gets",
+      "evidence": [
+        "https://claude.ai/code/artifact/9347689e-bea8-4593-b86b-a62b70c88d40",
+        "tmp/soil/hypotheses.json h6, h2"
+      ],
+      "verifyBy": "The PRD states numeric targets for Tiers 1-3 and the in-scope write actions; The PRD names numeric tier targets and the in-scope write actions per surface"
+    },
+    {
+      "kind": "access",
+      "action": "Turn on Braintrust log reads (sql_query, infer_schema) for this automation on rootly-prod-agent",
+      "target": "This Soil automation's Braintrust integration setting; project rootly-prod-agent (8f790d74-eb83-4f65-962d-24527bb4666d)",
+      "why": "The hook treats sql_query and infer_schema as writes and refused them twice on 2026-11-12; metadata reads work",
+      "evidence": [
+        "tmp/soil/incident.json data_gaps"
+      ],
+      "verifyBy": "A sql_query against rootly-prod-agent project_logs returns rows from the lane"
+    },
+    {
+      "kind": "other",
+      "action": "Turn on Braintrust log reads for this automation on rootly-prod-agent",
+      "target": "Braintrust integration settings for this Soil automation",
+      "why": "sql_query and infer_schema were refused by the lane hook twice on 2026-11-12; project metadata reads work",
+      "evidence": [
+        "tmp/soil/incident.json"
+      ],
+      "verifyBy": "sql_query on rootly-prod-agent returns rows"
+    }
+  ],
+  "followUps": [
+    {
+      "kind": "human",
+      "what": "Set the homepage agent KR tier targets and the web write-tool scope",
+      "why": "90d: Tier 1 89.9% (upper bound), Tier 2 0.78%, Tier 3 9.3% overall and 27.5% on web",
+      "target": "Homepage redesign PRD owners (Nour, John)",
+      "evidence": [
+        "https://claude.ai/code/artifact/9347689e-bea8-4593-b86b-a62b70c88d40"
+      ],
+      "humanKind": "other",
+      "verifyBy": "The PRD names numeric tier targets and the in-scope write actions per surface"
+    },
+    {
+      "kind": "human",
+      "what": "Turn on Braintrust log reads for this automation on rootly-prod-agent",
+      "why": "sql_query and infer_schema were refused by the lane hook twice on 2026-11-12; project metadata reads work",
+      "target": "Braintrust integration settings for this Soil automation",
+      "evidence": [
+        "tmp/soil/incident.json"
+      ],
+      "humanKind": "other",
+      "verifyBy": "sql_query on rootly-prod-agent returns rows"
+    },
+    {
+      "kind": "investigate",
+      "what": "Find the source of homepage traffic by persona (PRD: 27.8k views / 30d, 23% of active users) and add it to the artifact",
+      "why": "ahoy_events in Main DB has 0 rows for the last 30 days and no Metabase card for homepage views was found",
+      "target": "Metabase warehouse sources (Snowflake/Segment) and the PRD's cited dashboard",
+      "evidence": [
+        "https://claude.ai/code/artifact/9347689e-bea8-4593-b86b-a62b70c88d40"
+      ]
+    },
+    {
+      "kind": "investigate",
+      "what": "Explain the drop in agent handback rate for the weeks of Sep 21 to Oct 5 and its return from Oct 12",
+      "why": "Weekly Tier 3 rate was 3.4-4.9% in those weeks vs 10-14% before and 8-10% after, on both Slack and web",
+      "target": "rootlyhq/rootly deploys, model config and config/ai prompt changes, 2026-09-15 to 2026-10-15; Datadog deploy events",
+      "evidence": [
+        "tmp/soil/hypotheses.json h6"
+      ]
+    },
+    {
+      "kind": "track",
+      "what": "Give web chat the incident-update, paging and retro write tools once scope is decided",
+      "why": "Web hands back 27.5% of asks vs 8.8% in Slack over 90 days",
+      "target": "AI",
+      "evidence": [
+        "rootlyhq/rootly app/services/ai/features/web_chat.rb",
+        "rootlyhq/rootly app/services/ai/tools/home_write_allowlist.rb"
+      ],
+      "problem": "Rootly Agent on web can't update incidents, page people or edit retros, so web users are told to do it themselves",
+      "doneWhen": "Web Tier 3 handback rate is at or below Slack's (about 9%)"
+    },
+    {
+      "kind": "track",
+      "what": "Record agent resolution and refusal outcomes as structured fields",
+      "why": "feedback_sentiment is null for all 200,845 messages in 90 days and refusals exist only as reply text",
+      "target": "AI",
+      "evidence": [
+        "rootlyhq/rootly app/services/ai/tool_calls/recorder.rb"
+      ],
+      "problem": "We can't measure whether Rootly Agent resolved a question or refused it without hand-classifying chat text",
+      "doneWhen": "A Metabase card shows the tier 1/2/3 split per surface from structured fields"
+    }
+  ],
+  "lessons": {
+    "went_well": [
+      "Main DB had enough to size every tier, split by surface, cluster intents, check the PRD's prompts and rank manual actions.",
+      "Checking the shape of assistant messages caught that 70% are tool-call rows, which corrected Tier 3 from 5.3% to 9.3% before the numbers reached the PRD."
+    ],
+    "went_wrong": [
+      "The lane first narrowed to refusals and delivered no artifact, then shipped tier numbers that paired asks with tool-call rows; both needed rework.",
+      "Braintrust log reads stayed blocked by the hook, so no trace-level data is in the artifact.",
+      "Feedback is empty, so Tier 1 is only an upper bound."
+    ],
+    "got_lucky": [
+      "Home chat has almost no volume yet (about 67 sessions), so the web read-only gap has not hit homepage users at scale.",
+      "If the 90-day window had covered only Sep 21 to Oct 11, Tier 3 would have read about 4% and the KR target would have been set too low."
+    ]
+  },
+  "summary": "Second rework after a rejection with no new guidance. Re-ran the open leads. (1) Method correction: about 70% of assistant rows are JSON tool-call records, so the first pass, which paired each ask with the next assistant row, missed many refusals. Pairing with the turn's last non-JSON reply moves Tier 3 from 5.3% to 9.3% and web from 26.3% to 27.5%, and latency is now time to final reply (8.8s p50). Artifact updated (version 4). (2) h3 invalidated: flipper_gates has 9 actor rows for the parity flag (off for nearly all paying teams), but the flag only gates home/dashboard chat, which has negligible volume; the refusals are on Slack and web. (3) h5 invalidated: 75 off-topic canned replies, 3 on action asks; empty_context 0. (4) The Sep 21 to Oct 5 dip is present on both surfaces after the correction; commit messages don't explain it, so it is a follow-up. (5) Braintrust retried: metadata reads work (projects, monitoring views: none), but log reads stay blocked and the project has no experiments. (6) The funnel was redesigned at the operator's request (labels left, values right, no text cropped). h2 stays the mechanism for web's handback; h6 stays the leading answer. Caveats: keyword intent buckets; refusal rule ~80% precision; manual-action windows mixed and normalized per week."
+}

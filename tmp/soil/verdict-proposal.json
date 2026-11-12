@@ -1,0 +1,252 @@
+{
+  "impact": "The Rootly Agent handed 27.6% of web asks back to the user (vs 9.0% in Slack) across 914 of 3,165 paying-team users from Aug 2 to Nov 12, with no outage.",
+  "severity": "sev4",
+  "scope": {
+    "users": "3,165 users asked the agent; 914 (29%) on 205 teams were handed back at least once; 208 users hit the same intent wall 2+ times",
+    "requests": "Tier 3 2,058 of 21,810 asks (9.4%); web 445 of 1,611 (27.6%); Slack 1,523 of 16,989 (9.0%); mobile 73 of 3,011 (2.4%)",
+    "slo": "not applicable: product sizing, not an availability or latency SLO",
+    "revenue": "unknown"
+  },
+  "executive_summary": "The data pack is published at https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8 (private until shared). Window: the last 6 months of sessions (about 150k since May); message text exists only from Aug 2, so ask-level numbers cover Aug 2 - Nov 12. Of 21,810 asks, the agent replied without refusing to 89.8% (Tier 1, an upper bound because there is no resolution feedback), pointed to docs for 0.76% (Tier 2) and handed back 9.4% (Tier 3). Web, where the homepage will live, hands back 27.6% because web chat lacks incident-update, paging and retro tools. Handbacks are broad, not a few accounts: 914 of 3,165 users, and the top 10 teams' rate (9.3%) matches the rest (9.5%). But 208 users were handed back on the same intent repeatedly (46% of handbacks). Braintrust metadata shows the golden-set eval (38 scenarios, 894 cases) is organized by tool and has no cases for 7 intents that hold 24% of handbacks: Slack channel, declare, tickets, config, metrics, root cause and shift cover. Scores and traces stay blocked by the lane hook. Proposed KR: at least 85% resolved by a real resolution signal; config and admin asks routed to Tier 2; at most 9% handed back on the homepage with a 5% stretch, measured offline by adding persona and surface scenarios to the golden set.",
+  "leading_hypothesis": "h6",
+  "root_cause": "Web chat offers most users only read-only tools and the golden-set eval has no cases for the intents handed back most, so web returns incident-update, paging and retro asks that Slack completes and nothing offline shows it.",
+  "trigger": "No incident trigger: the homepage redesign kickoff asked for data to size a 3-tier KR before the agent moves from the incident page to a global component.",
+  "detection": "Measured on request with text rules over ai_session_messages; there is no structured refusal tag or resolution feedback, so no dashboard tracks tier rates today.",
+  "resolution": "Data pack published; the KR targets and the web write-tool scope are product decisions still to make.",
+  "five_whys": [
+    "More than one in four web asks to the agent ends with the work handed back to the user.",
+    "Web chat refuses incident updates, paging and retros that Slack completes.",
+    "Web chat keeps only READ_ONLY_TOOLS unless the user passes home-chat gating, and even then it has no incident-update, paging or retro tool.",
+    "Write access on web was scoped to the early home-chat rollout and never extended to incident-level actions.",
+    "The scope of web write tools and the eval coverage for the global agent are product decisions the homepage redesign has to make now."
+  ],
+  "signals": [
+    {
+      "label": "Answered (Tier 1 upper bound)",
+      "value": "89.8%",
+      "note": "19,587 of 21,810 asks; 48 explicit corrections in 2,112 follow-ups",
+      "tone": "good"
+    },
+    {
+      "label": "Web handback (Tier 3)",
+      "value": "27.6%",
+      "note": "vs 9.0% in Slack and 2.4% on mobile",
+      "tone": "bad"
+    },
+    {
+      "label": "Users handed back",
+      "value": "29%",
+      "note": "914 of 3,165; 208 repeat the same intent (46% of handbacks)",
+      "tone": "warn"
+    },
+    {
+      "label": "Handbacks with no eval coverage",
+      "value": "23.6%",
+      "note": "486 handbacks in 7 intents with zero golden-set cases",
+      "tone": "bad"
+    }
+  ],
+  "breakdown": {
+    "title": "Web hands back three times as many asks as Slack",
+    "caption": "Share of user messages by tier and surface, paying teams, Aug 2 - Nov 12 (all stored messages in the 6-month window)",
+    "unit": "%",
+    "rows": [
+      {
+        "label": "Web",
+        "emphasis": true,
+        "total": "1,611 asks",
+        "segments": [
+          {
+            "label": "Tier 1 answered",
+            "value": 72.0,
+            "tone": "neutral"
+          },
+          {
+            "label": "Tier 2 docs",
+            "value": 0.4,
+            "tone": "warn"
+          },
+          {
+            "label": "Tier 3 handed back",
+            "value": 27.6,
+            "tone": "bad"
+          }
+        ]
+      },
+      {
+        "label": "Slack (control)",
+        "emphasis": false,
+        "total": "16,989 asks",
+        "segments": [
+          {
+            "label": "Tier 1 answered",
+            "value": 90.2,
+            "tone": "good"
+          },
+          {
+            "label": "Tier 2 docs",
+            "value": 0.9,
+            "tone": "warn"
+          },
+          {
+            "label": "Tier 3 handed back",
+            "value": 9.0,
+            "tone": "bad"
+          }
+        ]
+      },
+      {
+        "label": "Mobile",
+        "emphasis": false,
+        "total": "3,011 asks",
+        "segments": [
+          {
+            "label": "Tier 1 answered",
+            "value": 97.6,
+            "tone": "good"
+          },
+          {
+            "label": "Tier 2 docs",
+            "value": 0,
+            "tone": "warn"
+          },
+          {
+            "label": "Tier 3 handed back",
+            "value": 2.4,
+            "tone": "bad"
+          }
+        ]
+      }
+    ],
+    "footnote": "Each ask is paired with the agent's final text reply in that turn (JSON tool-call rows skipped). Tiers come from text rules (refusal rule ~80% precision on a 50-message sample); Tier 1 is replies that did not refuse or fail, not confirmed resolutions."
+  },
+  "confidence": "medium",
+  "remediation": "keep monitoring",
+  "actions": [
+    "Share the artifact (https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8) with Nour and #proj-homepage-redesign; it is private until shared from its Share menu.",
+    "Decide the KR targets per tier (proposed: at least 85% resolved, Tier 2 for config and admin asks, at most 9% handed back on the homepage with a 5% stretch).",
+    "Decide which write actions (incident update/resolve, paging, retros, declare) the global agent gets on web, then open the rootlyhq/rootly PR for them.",
+    "Turn on Braintrust reads (sql_query, infer_schema, summarize_experiment) for this automation, then add golden-set pass rates per scenario, trace-level intents, model latency and cost to the artifact.",
+    "Find the source of the PRD's homepage traffic numbers (27.8k views / 30 days, 23% of active users); ahoy_events in Main DB is empty.",
+    "Add a resolution signal and a structured refusal tag so the tiers can be tracked as metrics.",
+    "Trace why the Tier 3 rate fell to 3-5% for the weeks of Sep 21 to Oct 5 on both Slack and web, then returned to 8-10%.",
+    "Add golden-set scenarios for Slack channel, declare, tickets, config, metrics, root-cause and shift-cover asks, run per surface, and seed them from the 948 repeat handbacks.",
+    "Check whether the agent runtime changed around Sep 18 (Braintrust prod tracing start) and explains the Sep 21 - Oct 5 handback dip."
+  ],
+  "humanActions": [
+    {
+      "kind": "decision",
+      "action": "Set the homepage agent KR targets per tier and the web write-tool scope",
+      "target": "Homepage redesign PRD (Notion: Draft Homepage Redesign), owners Nour and John",
+      "why": "Tier 3 on web is 27.6% vs 9.0% in Slack; the target depends on which write tools web gets",
+      "evidence": [
+        "https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8",
+        "tmp/soil/hypotheses.json h6, h2, h8"
+      ],
+      "verifyBy": "The PRD states numeric targets for Tiers 1-3 and the in-scope write actions"
+    },
+    {
+      "kind": "access",
+      "action": "Turn on Braintrust reads (sql_query, infer_schema, summarize_experiment, project settings) for this automation",
+      "target": "This Soil automation's Braintrust integration setting; projects rootly-prod-agent (8f790d74-eb83-4f65-962d-24527bb4666d) and rootly-evals (604936d1-f7cb-44ab-a0a5-7d70c6aeae01)",
+      "why": "The hook treats these reads as writes and refused them again on 2026-11-12; only project and experiment metadata is readable, so golden-set scores are missing",
+      "evidence": [
+        "tmp/soil/incident.json data_gaps"
+      ],
+      "verifyBy": "summarize_experiment on golden_set_summary-20261111T000354Z returns scores from the lane"
+    }
+  ],
+  "followUps": [
+    {
+      "kind": "human",
+      "what": "Set the homepage agent KR tier targets and the web write-tool scope",
+      "why": "Tier 1 89.8% (upper bound), Tier 2 0.76%, Tier 3 9.4% overall and 27.6% on web (Aug 2 - Nov 12)",
+      "target": "Homepage redesign PRD owners (Nour, John)",
+      "evidence": [
+        "https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8"
+      ],
+      "verifyBy": "The PRD names numeric tier targets and the in-scope write actions per surface"
+    },
+    {
+      "kind": "human",
+      "what": "Turn on Braintrust reads for this automation (rootly-prod-agent and rootly-evals)",
+      "why": "sql_query, infer_schema, summarize_experiment and get_project_settings were refused by the lane hook on 2026-11-12; only metadata reads work",
+      "target": "Braintrust integration settings for this Soil automation",
+      "evidence": [
+        "tmp/soil/incident.json"
+      ],
+      "verifyBy": "summarize_experiment on the latest golden_set_summary returns scores"
+    },
+    {
+      "kind": "investigate",
+      "what": "Find the source of homepage traffic by persona (PRD: 27.8k views / 30d, 23% of active users) and add it to the artifact",
+      "why": "ahoy_events in Main DB has 0 rows for the last 30 days and no Metabase card for homepage views was found",
+      "target": "Metabase warehouse sources (Snowflake/Segment) and the PRD's cited dashboard",
+      "evidence": [
+        "https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8"
+      ]
+    },
+    {
+      "kind": "investigate",
+      "what": "Explain the drop in agent handback rate for the weeks of Sep 21 to Oct 5 and its return from Oct 12",
+      "why": "Weekly Tier 3 rate was 3.4-4.9% in those weeks vs 10-14% before and 8-10% after, on both Slack and web; Braintrust's rootly-prod-agent project was created Sep 18, three days before",
+      "target": "rootlyhq/rootly deploys, model config and config/ai prompt changes, 2026-09-15 to 2026-10-15; Datadog deploy events",
+      "evidence": [
+        "tmp/soil/hypotheses.json h6"
+      ]
+    },
+    {
+      "kind": "track",
+      "what": "Give web chat the incident-update, paging and retro write tools once scope is decided",
+      "why": "Web hands back 27.6% of asks vs 9.0% in Slack",
+      "target": "AI",
+      "evidence": [
+        "rootlyhq/rootly app/services/ai/features/web_chat.rb",
+        "rootlyhq/rootly app/services/ai/tools/home_write_allowlist.rb"
+      ],
+      "problem": "Rootly Agent on web can't update incidents, page people or edit retros, so web users are told to do it themselves",
+      "doneWhen": "Web Tier 3 handback rate is at or below Slack's (about 9%)"
+    },
+    {
+      "kind": "track",
+      "what": "Record agent resolution and refusal outcomes as structured fields",
+      "why": "feedback_sentiment is null for every stored message and refusals exist only as reply text",
+      "target": "AI",
+      "evidence": [
+        "rootlyhq/rootly app/services/ai/tool_calls/recorder.rb"
+      ],
+      "problem": "We can't measure whether Rootly Agent resolved a question or refused it without hand-classifying chat text",
+      "doneWhen": "A Metabase card shows the tier 1/2/3 split per surface from structured fields"
+    },
+    {
+      "kind": "track",
+      "what": "Cover the high-handback intents and surfaces in the agent golden-set eval",
+      "why": "7 intents with zero golden-set cases hold 486 of 2,058 handbacks (23.6%); the suite runs only in env:test, without the web read-only tool set",
+      "target": "AI",
+      "evidence": [
+        "Braintrust rootly-evals golden_set_summary-20261111T000354Z (metadata)",
+        "https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8"
+      ],
+      "problem": "The Rootly Agent eval can't show the homepage KR gap because it has no cases for Slack channel, declare, tickets, config, metrics, root-cause or shift-cover asks, and none per surface",
+      "doneWhen": "The golden set has scenarios for every in-scope homepage intent, run per surface, and reports a tier 1/2/3 split"
+    }
+  ],
+  "lessons": {
+    "went_well": [
+      "Main DB had enough to size every tier, split by surface, cluster intents, check the PRD's prompts and rank manual actions.",
+      "Checking the shape of assistant messages caught that 70% are tool-call rows, which corrected Tier 3 from 5.3% to 9.3% before the numbers reached the PRD.",
+      "The per-user split showed handbacks track volume, not specific accounts, which rules out a few customers as the cause."
+    ],
+    "went_wrong": [
+      "The lane first narrowed to refusals and delivered no artifact, then shipped tier numbers that paired asks with tool-call rows; both needed rework.",
+      "Braintrust trace and score reads stayed blocked by the hook; only experiment metadata could be used.",
+      "Feedback is empty, so Tier 1 is only an upper bound.",
+      "Message text is stored only from Aug 2, so the requested 6-month view of asks covers 14 weeks."
+    ],
+    "got_lucky": [
+      "Home chat has almost no volume yet (about 67 sessions), so the web read-only gap has not hit homepage users at scale.",
+      "If the 90-day window had covered only Sep 21 to Oct 11, Tier 3 would have read about 4% and the KR target would have been set too low."
+    ]
+  },
+  "summary": "Third rework, following operator guidance (Braintrust findings, per-user distribution, 6-month intent breakdown with handback rates, JJ's methodology). (1) Window moved to 180 days. Sessions go back to May, but message text starts Aug 2, so asks cover Aug 2 - Nov 12. Numbers barely move: 21,810 asks, Tier 3 9.4%, web 27.6%, Slack 9.0%. (2) Per-user (h7, invalidated): handbacks are broad (914 of 3,165 users, 205 teams, and the top 10 teams' rate matches the rest), with a repeat tail (208 users, 46% of handbacks). (3) Intent x month heatmap added: declare and paging improved from Aug to Oct; Slack channel, retro and tickets stayed high. (4) Braintrust (h8, validated): the golden-set eval (38 scenarios, 894 cases, env:test) is tool-organized and has no cases for 7 intents holding 24% of handbacks. rootly-prod-agent was created Sep 18, a lead for the Sep 21 dip. Scores and traces stay blocked by the hook. (5) JJ's methodology answered on the page: real asks replace incident mining; the golden set is the harness for persona prompts; repeat handbacks seed the hard set. KPI mapping included. The new artifact URL replaces the old one because the lane hook refused updates to the earlier artifact after the session reset. h2 stays the mechanism; h6 leads. Caveats: keyword intents, about 80% refusal precision, intent-to-scenario mapping by name."
+}

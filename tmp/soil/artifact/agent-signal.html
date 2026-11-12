@@ -1,0 +1,378 @@
+<title>Rootly Agent Signal</title>
+<style>
+:root{
+  --bg:#faf8ff;--panel:#ffffff;--ink:#1d1530;--muted:#6b6185;--line:#e7e1f5;--soft:#f1ecfc;
+  --p1:#2e1065;--p3:#6d28d9;--p4:#8b5cf6;--p5:#a78bfa;--p6:#c4b5fd;--p7:#ddd6fe;
+  --bad:#d6336c;--warn:#e8a33d;--good:#7c3aed;--grid:#ece6f8;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e0a18;--panel:#171126;--ink:#ede8fb;--muted:#a59bc2;--line:#2a2140;--soft:#1f1833;
+  --p1:#ede9fe;--p3:#c4b5fd;--p4:#a78bfa;--p5:#8b5cf6;--p6:#6d28d9;--p7:#4c1d95;
+  --bad:#f06595;--warn:#f2b45a;--good:#b197fc;--grid:#251d39;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e0a18;--panel:#171126;--ink:#ede8fb;--muted:#a59bc2;--line:#2a2140;--soft:#1f1833;
+  --p1:#ede9fe;--p3:#c4b5fd;--p4:#a78bfa;--p5:#8b5cf6;--p6:#6d28d9;--p7:#4c1d95;
+  --bad:#f06595;--warn:#f2b45a;--good:#b197fc;--grid:#251d39;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:28px 60px}
+header{display:grid;gap:6px;margin-bottom:22px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--p4);font-weight:700}
+h1{font-size:clamp(26px,4vw,40px);line-height:1.1;margin:0;letter-spacing:-.02em}
+h1 em{font-style:normal;background:linear-gradient(90deg,#7c3aed,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--muted);max-width:820px;font-size:15px;margin:4px 0 0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--muted);border:1px solid var(--line)}
+.chip.bad{color:var(--bad)}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.kpi b{display:block;font-size:30px;letter-spacing:-.02em;line-height:1.1}
+.kpi .l{font-size:12.5px;color:var(--muted)}
+.kpi .c{font-size:12px;margin-top:6px}
+.kpi.hero{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:#fff;border:0}
+.kpi.hero .l,.kpi.hero .c{color:#e9e2ff}
+.up{color:var(--bad)}
+section{margin-top:34px}
+h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 14px;max-width:860px}
+.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))}
+.chart{width:100%;overflow-x:auto}
+svg{display:block;max-width:100%;height:auto}
+svg text{fill:var(--ink);font-size:11px}
+svg .mut{fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);padding:8px}
+td{border-bottom:1px solid var(--line);padding:8px;vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:8px;border-radius:4px;background:var(--p4);display:inline-block;vertical-align:middle}
+.tag{font-size:11px;padding:2px 8px;border-radius:999px;white-space:nowrap;font-weight:600}
+.t-yes{background:var(--p7);color:var(--p1)}
+.t-flag{background:var(--soft);color:var(--p3);border:1px dashed var(--p5)}
+.t-no{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.tiers{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.tier h3{margin:0;font-size:14px}.tier .big{font-size:34px;font-weight:700;letter-spacing:-.02em}
+.tier .tgt{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:13px}
+.tier .tgt b{color:var(--p3)}
+.callout{border-left:3px solid var(--p4);background:var(--soft);padding:12px 14px;border-radius:0 12px 12px 0;margin-top:12px}
+.gaps li{margin-bottom:6px}
+code{font-size:12px;background:var(--soft);padding:1px 5px;border-radius:5px}
+.tt{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:8px;opacity:0;transition:opacity .1s;z-index:9;max-width:260px}
+.foot{color:var(--muted);font-size:12px;margin-top:40px}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Rootly Agent · homepage redesign · data pack</div>
+  <h1>The agent answers <em>9 in 10 asks</em>, but web hands back <em>more than 1 in 4</em></h1>
+  <p class="lede">Before the agent moves out of the incident and onto the homepage, here is how people use it today, what they ask, where it hands the work back, and which manual actions in the web app it could take over. Data covers paying, non-sandbox teams over the last 6 months (May 16 – Nov 12, 2026). Sessions exist for the whole window, but message text is only stored from early August, so every ask-level number covers Aug 2 – Nov 12. The manual-action table uses shorter windows, noted there.</p>
+  <div class="meta"><span class="chip">Source: Metabase · Main DB</span><span class="chip">Braintrust: eval-suite metadata</span><span class="chip bad">Braintrust: trace and score reads blocked</span><span class="chip">Homepage traffic: not in Main DB</span><span class="chip">Pulled 2026-11-12</span></div>
+</header>
+
+<div class="grid kpis">
+  <div class="card kpi hero"><span class="l">User messages to the agent, 6 mo</span><b>21,810</b><div class="c">across 6 chat surfaces · 3,165 users · ~150k sessions since May, but messages stored only from Aug 2</div></div>
+  <div class="card kpi"><span class="l">Answered (Tier 1 upper bound)</span><b>89.8%</b><div class="c">19,587 asks got a final reply with no refusal or error</div></div>
+  <div class="card kpi"><span class="l">Handed back (Tier 3)</span><b>9.4%</b><div class="c">2,058 asks: refusals, errors, no final reply</div></div>
+  <div class="card kpi"><span class="l">Web handback rate</span><b class="up">27.6%</b><div class="c">vs <b>9.0%</b> in Slack and <b>2.4%</b> on mobile</div></div>
+  <div class="card kpi"><span class="l">Users who were handed back</span><b>29%</b><div class="c">914 of 3,165 users, on 205 teams. Spread wide, but 208 users hit the same wall twice or more</div></div>
+  <div class="card kpi"><span class="l">Time to final reply, p50 / p95</span><b>8.8s <span style="font-size:18px;color:var(--muted)">/ 37s</span></b><div class="c">all surfaces · Slack 9.3s / 41s · web 8.4s / 36s</div></div>
+  <div class="card kpi"><span class="l">Pointed to docs (Tier 2)</span><b>0.76%</b><div class="c">165 asks. The agent rarely links help-center docs</div></div>
+</div>
+
+<section>
+  <h2>Tier sizing for the KR</h2>
+  <p class="sub">Nour's three tiers, measured from every user message and the agent's next reply. Tier 1 is an <b>upper bound</b>: it counts replies that didn't refuse or fail, but there's no signal yet that the user's problem was actually solved (thumbs-up/down feedback is empty for every message stored).</p>
+  <div class="grid tiers">
+    <div class="card tier"><h3>Tier 1 · Agent resolves it</h3><div class="big">89.8%</div><div style="color:var(--muted)">19,587 of 21,810 asks</div>
+      <div class="tgt">Proposed homepage target: <b>≥ 85% resolved</b>, measured by a real resolution signal (thumbs-up, or no correction in the next message), not reply-without-refusal. Only 48 of 2,112 follow-ups today are explicit corrections ("that's wrong", "didn't work").</div></div>
+    <div class="card tier"><h3>Tier 2 · Points to docs / self-serve</h3><div class="big">0.76%</div><div style="color:var(--muted)">165 asks</div>
+      <div class="tgt">Proposed: <b>route config &amp; admin asks here</b>. Today 46 of 284 config asks are refused and only 14 get a docs link. Tier 2 is nearly empty because the agent rarely cites help-center pages.</div></div>
+    <div class="card tier"><h3>Tier 3 · Handed back to the user</h3><div class="big">9.4%</div><div style="color:var(--muted)">2,058 asks · web 27.6%</div>
+      <div class="tgt">Proposed: <b>≤ 9% on the homepage</b>, Slack's level today, with 5% as a stretch. That needs incident update, paging and retro tools on web, where 27.6% of asks are handed back now.</div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="chart" id="tierSurf"></div>
+    <div class="legend"><span><i style="background:var(--p4)"></i>Tier 1 answered</span><span><i style="background:var(--warn)"></i>Tier 2 docs</span><span><i style="background:var(--bad)"></i>Tier 3 handed back</span></div>
+  </div>
+  <p class="sub" style="margin-top:10px;font-size:12.5px">The targets are proposals for discussion, derived from today's surface rates. They are not measurements.</p>
+</section>
+
+<section>
+  <h2>Volume is climbing; handbacks dropped in late September, then came back</h2>
+  <p class="sub">Weekly user messages (bars) and the Tier 3 handback rate (line), from the first full week of stored messages. Handbacks ran at 10–14% through mid-September, fell to 3–5% for the weeks of Sep 21, Sep 28 and Oct 5 in both Slack and web, then returned to 8–10% from Oct 12. Prompt commit messages from those dates don't explain it. One lead from Braintrust: the <code>rootly-prod-agent</code> tracing project was created on Sep 18, three days before the dip, so the agent's runtime may have changed that week. The cause is still open. The week of Nov 9 is partial.</p>
+  <div class="card"><div class="chart" id="trend"></div>
+  <div class="legend"><span><i style="background:var(--p6)"></i>User messages / week</span><span><i style="background:var(--bad)"></i>Tier 3 rate</span></div></div>
+  <div class="card" style="margin-top:14px"><div class="chart" id="hist"></div>
+  <div class="legend"><span><i style="background:var(--p7)"></i>Agent sessions / month (chat surfaces)</span><span><i style="background:var(--p4)"></i>User messages stored / month</span></div>
+  <p class="sub" style="margin:8px 0 0;font-size:12.5px">The six-month view. Sessions ran at 20k+ a month from June, but almost none have stored message text before August (14 messages in June, 42 in July), so Main DB can't take the ask-level analysis further back. May and November are partial months.</p></div>
+</section>
+
+<section>
+  <h2>Surfaces: Slack carries 78% of asks; web is small and refuses three times as often</h2>
+  <p class="sub">Conversations are sessions with at least one user message. "AI SRE memory" sessions are background alert investigations, not chat, so they are left out of the tier math.</p>
+  <div class="grid two">
+    <div class="card"><div class="chart" id="surf"></div></div>
+    <div class="card"><div class="chart" id="lat"></div>
+      <div class="legend"><span><i style="background:var(--p4)"></i>p50 final reply</span><span><i style="background:var(--p7)"></i>p95</span></div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Who gets handed back: spread across many users, with a repeat tail</h2>
+  <p class="sub">Every asker, bucketed by how many of their asks the agent handed back (Aug 2 – Nov 12). Most handbacks are one-offs spread over many people and teams, so the gap is not one customer's quirk. A minority hit the same wall again and again, and they are the clearest signal of missing capability.</p>
+  <div class="grid kpis" style="margin-top:0">
+    <div class="card kpi"><span class="l">Users handed back at least once</span><b>914</b><div class="c">of 3,165 users (29%) · 205 teams</div></div>
+    <div class="card kpi"><span class="l">Top 10 users' share of handbacks</span><b>13.6%</b><div class="c">279 of 2,058 · top 50 users: 31%</div></div>
+    <div class="card kpi"><span class="l">Same intent handed back 2+ times</span><b>208 users</b><div class="c">948 handbacks, 46% of all</div></div>
+    <div class="card kpi"><span class="l">Top 10 teams vs the rest</span><b>9.3% <span style="font-size:18px;color:var(--muted)">vs 9.5%</span></b><div class="c">The top 10 teams hold 42.5% of handbacks and 43% of asks, so their rate matches everyone else's</div></div>
+  </div>
+  <div class="grid two" style="margin-top:14px">
+    <div class="card"><div class="chart" id="ubuck"></div>
+      <div class="legend"><span><i style="background:var(--p3)"></i>Share of users</span><span><i style="background:var(--bad)"></i>Share of handbacks</span></div></div>
+    <div class="card"><div class="chart" id="urep"></div>
+      <div class="legend"><span><i style="background:var(--bad)"></i>Same intent handed back 2+ times</span><span><i style="background:var(--p5)"></i>Handed back once in that intent</span></div></div>
+  </div>
+  <div class="callout"><b>Read:</b> 557 users were handed back exactly once. The 24 heaviest users (10+ handbacks each) account for 22% of handbacks. Repeat walls cluster in catch-up summaries (46 users, 42 of them across separate sessions, mostly errors or no reply on long incidents), incident updates (31 users), Slack channel actions (20) and investigation or telemetry (17). These repeats are the natural seed for the hard-question set JJ suggested.</div>
+</section>
+
+<section>
+  <h2>What people ask</h2>
+  <p class="sub">User messages bucketed by intent with keyword rules (first match wins). Tile size = asks; color = handback rate. Catch-up and summaries dominate. Retros (29%), tickets (29%), declaring incidents (20%), config (17%) and Slack channel actions (17%) are handed back most often.</p>
+  <div class="card"><div class="chart" id="tree"></div>
+  <div class="legend"><span><i style="background:#ddd6fe"></i>&lt; 5% handed back</span><span><i style="background:#a78bfa"></i>5–10%</span><span><i style="background:#6d28d9"></i>10–20%</span><span><i style="background:#d6336c"></i>&gt; 20%</span></div></div>
+  <div class="card" style="margin-top:14px"><div class="chart" id="defl"></div>
+  <div class="legend"><span><i style="background:var(--bad)"></i>Refused</span><span><i style="background:var(--warn)"></i>Errored or no reply</span></div></div>
+  <div class="card" style="margin-top:14px"><div class="chart" id="heat"></div>
+  <div class="legend"><span><i style="background:#ddd6fe"></i>&lt; 5% handed back</span><span><i style="background:#a78bfa"></i>5–10%</span><span><i style="background:#6d28d9"></i>10–20%</span><span><i style="background:#d6336c"></i>&gt; 20%</span><span>cell text: asks · handback rate</span></div>
+  <p class="sub" style="margin:8px 0 0;font-size:12.5px">Month by month since stored messages begin. Declaring incidents went from 57% handed back in August to 4% in October, and paging from 15% to 5%. Slack channel actions (19% in October), retros (18–44%) and tickets stayed high. November is partial (to Nov 12).</p></div>
+</section>
+
+<section>
+  <h2>The PRD's 11 example prompts, against today's demand</h2>
+  <p class="sub">Each prompt matched with a targeted keyword pattern over the same 21,810 user messages. Three prompts carry real demand today: catch me up, who's on call, what's overdue. Five barely appear. They are new behaviors the homepage would have to teach.</p>
+  <div class="card tw"><table id="prd"><thead><tr><th>Persona prompt</th><th class="n">Asks, 6 mo</th><th>Demand</th><th class="n">Teams</th><th class="n">Handed back</th><th>Read</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section>
+  <h2>Manual actions the agent could take over</h2>
+  <p class="sub">The most frequent human-driven actions in Rootly, as a weekly rate, flagged by whether the agent can do them from home chat today. Alert counts are from the last 7 days and only count human channels (web, mobile, Slack, voice, SMS). Incident, role and shift counts are 30-day totals ÷ 30 × 7, all teams. Action-item counts are paying teams only.</p>
+  <div class="card tw"><table id="manual"><thead><tr><th>Action</th><th class="n">≈ per week</th><th></th><th>Where it happens</th><th>Agent on home chat</th></tr></thead><tbody></tbody></table></div>
+  <div class="callout"><b>Read:</b> Acknowledging and resolving alerts dwarf everything else, and home chat can already do both. The biggest gaps sit in the incident lifecycle: resolving or closing incidents, assigning roles and paging. These happen thousands of times a week, and the agent can only do them behind the <code>enable_ai_assistant_required_fields_v2</code> parity flag (home) or not at all (web incident chat).</div>
+</section>
+
+<section>
+  <h2>Adoption funnel</h2>
+  <p class="sub">From the existing Metabase card "Rootly Agent adoption funnel" (accounts).</p>
+  <div class="card"><div class="chart" id="funnel"></div></div>
+</section>
+
+<section>
+  <h2>What Braintrust shows: the eval suite tests reads, not the asks that get handed back</h2>
+  <p class="sub">This lane can read Braintrust metadata (projects, experiment names, run settings) but not traces or scores, so no pass rates appear here. The metadata still answers one question: which of the asks users make does the agent's golden-set eval cover?</p>
+  <div class="grid kpis" style="margin-top:0">
+    <div class="card kpi"><span class="l">Golden-set eval (rootly-evals)</span><b>38 scenarios</b><div class="c">894 cases, about 1 trial each, on 9 synthetic incidents (easy, medium, hard) in the test env. Runs about twice a day; latest Nov 11</div></div>
+    <div class="card kpi"><span class="l">Asks with zero eval cases</span><b>19.7%</b><div class="c">4,303 of 21,810 asks, in 7 intents that hold 23.6% of handbacks (486)</div></div>
+    <div class="card kpi"><span class="l">rootly-prod-agent project</span><b>Sep 18</b><div class="c">created then. No patterns, automations, monitoring views, datasets or experiments on it today</div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><div class="chart" id="cov"></div>
+    <div class="legend"><span><i style="background:var(--p5)"></i>Golden-set cases</span><span><i style="background:var(--bad)"></i>No eval coverage</span><span>right column: asks · handback rate, 6 mo</span></div></div>
+  <div class="callout"><b>Read:</b> Coverage follows the tool list, not demand. Catch-up and action items get about 100 cases each and are rarely handed back. Slack channel actions, declaring incidents, tickets, config, metrics, root-cause questions and shift cover have no cases, and they include the intents handed back most often. The suite does test paging (22 cases), incident updates (74) and retros (15), but only in the test env. Production web chat doesn't offer those tools, which is why web hands back 27.6% of asks. The homepage KR needs scenarios for each in-scope intent on each surface.</div>
+</section>
+
+<section>
+  <h2>How this answers the methodology questions in the kickoff thread</h2>
+  <p class="sub">JJ suggested three ways to find what the chat must support, and the thread asked for three KPIs: answered and not deflected, answered accurately, answered on time. Here is what this pack covers and what is still open.</p>
+  <div class="grid two">
+    <div class="card"><h3 style="margin-top:0">JJ's three suggestions</h3><ul>
+      <li><b>1 · Mine past incidents for likely questions.</b> <span class="tag t-yes">Covered from a better source</span> Instead of guessing questions from incidents, this pack reads the 21,810 questions people actually typed (3,165 users, 6 surfaces) and pairs each with the agent's final reply. The manual-action table adds what people do by hand in incidents, alerts and shifts. Not done: reading retro and timeline text for questions nobody has asked the agent yet.</li>
+      <li><b>2 · Generate hundreds of persona prompts with Claude and test which ones the chat handles.</b> <span class="tag t-flag">Half there</span> A harness already exists: the golden set runs 894 cases across 38 scenarios. It is organized by tool, not by persona or question, and it skips the high-handback intents above. Next step: generate about 300 persona prompts, seeded from the intents and repeat handbacks in this pack, add them as golden-set scenarios run per surface (web read-only vs Slack), and score them with the same tier rules. That run becomes the KR's offline measurement.</li>
+      <li><b>3 · Collect the really hard ones ourselves and from customers.</b> <span class="tag t-flag">Seed ready</span> The 948 repeat handbacks from 208 users are the hard set customers already found. Sample them by intent, strip identifiers and add them to the eval dataset.</li>
+    </ul></div>
+    <div class="card"><h3 style="margin-top:0">The KPIs in the thread</h3><ul>
+      <li><b>X% answered and not deflected:</b> Tier 1, 89.8% overall (an upper bound) and 72% on web. It comes from reply text, so a structured refusal tag is the next step.</li>
+      <li><b>Y% answered accurately:</b> <span class="tag t-no">no production signal</span> Feedback is empty everywhere. The only production proxy: 48 of 2,112 follow-ups open with an explicit correction. Golden-set scores would give an offline accuracy number, but this lane can't read them.</li>
+      <li><b>Z% answered on time:</b> time to final reply is 8.8s p50 and 37s p95. Model-level latency is in Braintrust traces, which this lane can't read.</li>
+      <li><b>One brain, many surfaces:</b> every tier is split by surface. Slack carries 78% of asks, so a homepage target should be read next to Slack's 9.0%.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <h2>Methodology</h2>
+  <div class="card"><ul>
+    <li><b>Population:</b> sessions in <code>ai_sessions</code> created in the last 180 days (May 16 – Nov 12, 2026). <code>ai_session_messages</code> holds no message text before Aug 2 (56 messages in Jun–Jul), so ask-level numbers cover Aug 2 – Nov 12. for teams with <code>paying_customer</code>, not sandbox, not deleted. Tier, intent and prompt analysis excludes the background surfaces <code>ai_sre_memory</code>, <code>automation</code> and <code>admin_kg</code>.</li>
+    <li><b>Unit:</b> each user message in <code>ai_session_messages</code>, paired with the agent's <b>final text reply in that turn</b>: the last assistant message before the user's next message. About 70% of stored assistant messages are JSON tool-call records, so those are skipped. (An earlier version of this page paired each ask with the next assistant message, which was often a tool call. That understated handbacks: 5.3% instead of 9.4%.)</li>
+    <li><b>Tier 3:</b> no final text reply, an error reply ("something went wrong", "timed out"), or can't-do wording ("I can't", "I don't have a tool", "read-only", "I'm unable to"…). Data misses ("can't find/see/access") are excluded. On a 50-message hand sample, the refusal rule was right 41 times (≈80% precision); recall was not measured.</li>
+    <li><b>Tier 2:</b> the reply links docs.rootly.com or the help center, or tells the user where to go in the app, and does not refuse.</li>
+    <li><b>Tier 1:</b> everything else. It's an upper bound on resolution.</li>
+    <li><b>Latency:</b> time from a user message to the agent's final text reply in that turn.</li>
+    <li><b>Correction proxy:</b> of 2,112 cases where the user wrote again after a reply, 48 open with an explicit correction ("no", "that's wrong", "didn't work"). It's a weak signal and isn't used in the tiers.</li>
+    <li><b>Guardrails:</b> the canned off-topic decline appeared 75 times (46 teams), 3 of them right after an action request. The empty-context decline never appeared on chat surfaces.</li>
+    <li><b>Intents and PRD prompts:</b> keyword and regex rules on lowercased text. They are heuristics: buckets like "Shift cover &amp; handover" also catch messages that mention shifts in passing.</li>
+    <li><b>Manual actions:</b> <code>alert_events</code> (kind action/status_update with a user), <code>incident_events</code> (user-attributed status kinds), <code>incident_role_assignments</code>, <code>shift_coverage_requests</code>, <code>shift_overrides</code>, <code>incident_action_items</code>. Home-chat capability is from <code>app/services/ai/tools/home_write_allowlist.rb</code> and the tools' <code>home_chat_write</code> declarations.</li>
+  </ul></div>
+</section>
+
+<section>
+  <h2>Data gaps</h2>
+  <div class="card"><ul class="gaps">
+    <li><b>Braintrust: metadata only.</b> Project and experiment metadata is readable, and it is used in the eval-coverage section above. Every trace or score read (<code>sql_query</code>, <code>infer_schema</code>, <code>summarize_experiment</code>, project settings) was refused by this lane's integration hook as not read-only, including retries on 2026-11-12. So there are no golden-set pass rates, trace-level intents, model latency or token cost here, and none have been estimated. The coverage map assigns golden-set scenarios to intents by name.</li>
+    <li><b>Homepage traffic by persona: not reproduced.</b> <code>ahoy_events</code> in Main DB has no rows for the last 30 days, and no Metabase card for homepage page views was found. The PRD's 27.8k views / 30d and 23% of active users could not be checked.</li>
+    <li><b>No resolution signal.</b> <code>feedback_sentiment</code> is empty for all messages in the window, so Tier 1 can't be split into "resolved" and "answered but not helpful".</li>
+    <li><b>Home chat has almost no volume yet</b> (about 67 sessions, 2 teams, per the earlier lane report), so it can't serve as a baseline for the new surface.</li>
+    <li><b>No structured refusal tag.</b> Tier 3 and intents come from text rules, so they are approximations.</li>
+    <li><b>Six months of asks isn't available.</b> About 150k sessions were created since May, but stored message text starts Aug 2, so the tiers cover 14 weeks. Older asks may exist in Braintrust traces, which this lane can't read.</li>
+    <li><b>Mixed windows in the manual-action table</b> (7-day alerts, 30-day incidents and shifts) are normalized to a weekly rate. Incident and shift counts include every team, not just paying ones.</li>
+    <li><b>Alert-action counts over 30 and 90 days timed out</b> in Metabase, so alert actions use the last 7 days only.</li>
+  </ul></div>
+</section>
+<p class="foot">No customer names or personal data are shown. All figures are aggregates from Metabase queries run on 2026-11-12.</p>
+</div>
+<div class="tt" id="tt"></div>
+
+<script>
+(function(){
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt=n=>n.toLocaleString('en-US');
+const pct=(a,b)=>(100*a/b).toFixed(1)+'%';
+const NS='http://www.w3.org/2000/svg';
+const tt=document.getElementById('tt');
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function txt(p,x,y,s,a){const t=el('text',Object.assign({x,y},a||{}),p);t.textContent=s;return t}
+function tip(e,s){e.addEventListener('mousemove',ev=>{tt.innerHTML=s;tt.style.opacity=1;tt.style.left=Math.min(ev.clientX+12,innerWidth-270)+'px';tt.style.top=(ev.clientY+12)+'px'});e.addEventListener('mouseleave',()=>tt.style.opacity=0)}
+function svg(id,w,h){const c=document.getElementById(id);c.innerHTML='';return el('svg',{viewBox:`0 0 ${w} ${h}`,width:w,role:'img'},c)}
+
+const surfT=[['Slack',15317,149,1523],['Mobile',2938,0,73],['Web',1160,6,445],['Google Chat',81,10,4],['Microsoft Teams',90,0,4],['API',1,0,9]];
+function drawTier(){const s=svg('tierSurf',760,30+surfT.length*34);const L=120,W=440;
+ txt(s,L,14,'Share of each surface’s asks',{class:'mut'});
+ surfT.forEach((r,i)=>{const n=r[1]+r[2]+r[3],y=24+i*34;txt(s,L-8,y+15,r[0],{'text-anchor':'end'});
+  let x=L;[[r[1],'--p4','Tier 1'],[r[2],'--warn','Tier 2'],[r[3],'--bad','Tier 3']].forEach(([v,c,l])=>{const w=W*v/n;if(w<=0)return;const b=el('rect',{x,y,width:w,height:22,fill:css(c)},s);tip(b,`<b>${r[0]}</b> · ${l}<br>${fmt(v)} of ${fmt(n)} (${pct(v,n)})`);x+=w});
+  txt(s,L+W+8,y+15,`${pct(r[3],n)} handed back · n=${fmt(n)}`,{class:'mut'})})}
+
+const wk=[['Aug 10',525,70],['Aug 17',1334,190],['Aug 24',1267,124],['Aug 31',1578,222],['Sep 7',1373,180],['Sep 14',1645,199],['Sep 21',1761,78],['Sep 28',1725,84],['Oct 5',1627,56],['Oct 12',1671,161],['Oct 19',1774,179],['Oct 26',2207,217],['Nov 2',2143,176],['Nov 9*',1147,120]];
+function drawTrend(){const W=900,H=280,L=50,R=50,T=20,B=40,s=svg('trend',W,H);const pw=(W-L-R)/wk.length,mx=2400,mr=16;
+ const a=L+6*pw,b=L+9*pw;el('rect',{x:a,y:T,width:b-a,height:H-T-B,fill:css('--p7'),opacity:.35},s);txt(s,(a+b)/2,T+12,'low-handback window',{'text-anchor':'middle',class:'mut'});
+ [0,600,1200,1800,2400].forEach(v=>{const y=T+(H-T-B)*(1-v/mx);el('line',{x1:L,x2:W-R,y1:y,y2:y,stroke:css('--grid')},s);txt(s,L-6,y+4,fmt(v),{'text-anchor':'end',class:'mut'})});
+ [0,8,16].forEach(v=>{const y=T+(H-T-B)*(1-v/mr);txt(s,W-R+6,y+4,v+'%',{class:'mut'})});
+ const pts=[];wk.forEach((d,i)=>{const x=L+i*pw,h=(H-T-B)*d[1]/mx;const r=d[2]/d[1];const bar=el('rect',{x:x+pw*.15,y:H-B-h,width:pw*.7,height:h,fill:css('--p6'),rx:3},s);
+  tip(bar,`<b>Week of ${d[0]}</b><br>${fmt(d[1])} user messages<br>${fmt(d[2])} handed back (${(100*r).toFixed(1)}%)`);
+  txt(s,x+pw/2,H-B+16,d[0],{'text-anchor':'middle',class:'mut'});pts.push([x+pw/2,T+(H-T-B)*(1-100*r/mr)])});
+ el('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:css('--bad'),'stroke-width':2.5},s);
+ pts.forEach(p=>el('circle',{cx:p[0],cy:p[1],r:3.5,fill:css('--bad')},s))}
+
+const surf=[['Slack',9767,16989],['Mobile',2974,3011],['Web',921,1611],['Google Chat',58,95],['Microsoft Teams',67,94],['API',10,10]];
+function drawSurf(){const s=svg('surf',460,30+surf.length*40),L=110,W=220,mx=16989;txt(s,0,14,'User messages by surface, Aug 2 – Nov 12',{class:'mut'});
+ surf.forEach((r,i)=>{const y=26+i*40;txt(s,L-8,y+14,r[0],{'text-anchor':'end'});const w=Math.max(2,W*r[2]/mx);
+  const b=el('rect',{x:L,y,width:w,height:20,fill:css(i?'--p5':'--p3'),rx:4},s);tip(b,`<b>${r[0]}</b><br>${fmt(r[2])} user messages<br>${fmt(r[1])} conversations`);
+  txt(s,L+w+6,y+14,`${fmt(r[2])} · ${(100*r[2]/21810).toFixed(1)}%`,{class:'mut'})})}
+const lat=[['Mobile',6.9,17.3],['Web',8.4,36.2],['Slack',9.3,41.4],['Microsoft Teams',10.1,28.2],['Google Chat',10.7,57.7]];
+function drawLat(){const s=svg('lat',460,30+lat.length*38),L=130,W=230,mx=60;txt(s,0,14,'Seconds to final reply',{class:'mut'});
+ lat.forEach((r,i)=>{const y=26+i*38;txt(s,L-8,y+14,r[0],{'text-anchor':'end'});
+  const b2=el('rect',{x:L,y:y+2,width:W*r[2]/mx,height:16,fill:css('--p7'),rx:4},s);const b1=el('rect',{x:L,y:y+2,width:W*r[1]/mx,height:16,fill:css('--p4'),rx:4},s);
+  [b1,b2].forEach(b=>tip(b,`<b>${r[0]}</b><br>p50 ${r[1]}s · p95 ${r[2]}s`));txt(s,L+W*r[2]/mx+6,y+14,`${r[1]}s / ${r[2]}s`,{class:'mut'})})}
+
+const intents=[['Summarize / catch me up',5429,197,77,7,166,0],['Other questions',3647,224,357,30,110,0],['Update incident / roles',2509,159,134,19,65,0],['Shift cover & handover',2104,165,63,7,24,0],['Short / greeting / unclear',1991,204,153,15,55,0],['Page / escalate',1041,109,80,6,15,0],['Slack channel & bridge',966,151,134,10,30,0],['Action items',845,91,53,5,15,0],['Investigate / telemetry',731,104,84,5,65,0],["Who's on call",552,87,15,0,2,0],['Why / root cause',449,89,30,6,55,0],['Status updates & comms',448,65,27,4,7,0],['Retro / postmortem',315,83,82,29,10,0],['Config & admin',284,89,46,14,3,0],['Metrics & reporting',237,74,26,4,10,0],['Declare incident',138,45,23,3,6,0],['Tickets (Jira/Linear/SNOW)',125,39,30,1,6,0]];
+const hb=r=>(r[3]+r[5]+r[6])/r[1];
+const tile=r=>{const v=hb(r);return v<.05?['#ddd6fe','#2e1065']:v<.10?['#a78bfa','#1d1530']:v<.20?['#6d28d9','#ffffff']:['#d6336c','#ffffff']};
+function squarify(items,x,y,w,h){const out=[];const total=items.reduce((a,b)=>a+b.v,0);const scale=w*h/total;let rest=items.map(d=>Object.assign({},d,{a:d.v*scale}));
+ function worst(row,side){const s=row.reduce((a,b)=>a+b.a,0);let m=0;row.forEach(r=>{m=Math.max(m,side*side*r.a/(s*s),s*s/(side*side*r.a))});return m}
+ while(rest.length){const side=Math.min(w,h);let row=[rest.shift()];while(rest.length&&worst(row.concat(rest[0]),side)<=worst(row,side))row.push(rest.shift());
+  const s=row.reduce((a,b)=>a+b.a,0);if(w>=h){const cw=s/h;let cy=y;row.forEach(r=>{const ch=r.a/cw;out.push(Object.assign(r,{x,y:cy,w:cw,h:ch}));cy+=ch});x+=cw;w-=cw}
+  else{const ch=s/w;let cx=x;row.forEach(r=>{const cw=r.a/ch;out.push(Object.assign(r,{x:cx,y,w:cw,h:ch}));cx+=cw});y+=ch;h-=ch}}return out}
+function drawTree(){const W=900,H=380,s=svg('tree',W,H);const rects=squarify(intents.map(r=>({v:r[1],r})),0,0,W,H);
+ rects.forEach(t=>{const [bg,fg]=tile(t.r);const g=el('g',{},s);el('rect',{x:t.x+1,y:t.y+1,width:Math.max(0,t.w-2),height:Math.max(0,t.h-2),fill:bg,rx:6},g);
+  if(t.w>70&&t.h>34){txt(g,t.x+8,t.y+18,t.r[0],{style:`fill:${fg};font-weight:600;font-size:${t.w>180?12.5:10.5}px`});txt(g,t.x+8,t.y+33,`${fmt(t.r[1])} · ${(100*hb(t.r)).toFixed(1)}% back`,{style:`fill:${fg};opacity:.85`})}
+  tip(g,`<b>${t.r[0]}</b><br>${fmt(t.r[1])} asks · ${t.r[2]} teams<br>refused ${t.r[3]} · errored or no reply ${t.r[5]}<br>pointed to docs ${t.r[4]}`)})}
+function drawDefl(){const rows=intents.slice().sort((a,b)=>hb(b)-hb(a));const s=svg('defl',900,44+rows.length*26),L=200,W=540,mx=.35;
+ txt(s,L,14,'Handback rate by intent (refused + errored + no reply ÷ asks)',{class:'mut'});
+ [0,.05,.1,.15,.2,.25,.3,.35].forEach(v=>{const x=L+W*v/mx;el('line',{x1:x,x2:x,y1:20,y2:24+rows.length*26,stroke:css('--grid')},s);txt(s,x,38+rows.length*26,Math.round(v*100)+'%',{'text-anchor':'middle',class:'mut'})});
+ rows.forEach((r,i)=>{const y=22+i*26;txt(s,L-8,y+13,r[0],{'text-anchor':'end'});const w1=W*(r[3]/r[1])/mx,w2=W*((r[5]+r[6])/r[1])/mx;
+  const a=el('rect',{x:L,y,width:w1,height:16,fill:css('--bad')},s);const b=el('rect',{x:L+w1,y,width:w2,height:16,fill:css('--warn')},s);
+  [a,b].forEach(e=>tip(e,`<b>${r[0]}</b><br>refused ${r[3]} (${pct(r[3],r[1])})<br>errored/no reply ${r[5]+r[6]} (${pct(r[5]+r[6],r[1])})<br>of ${fmt(r[1])} asks`));
+  txt(s,L+w1+w2+6,y+13,`${(100*hb(r)).toFixed(1)}%  ·  n=${fmt(r[1])}`,{class:'mut'})})}
+
+const prd=[['Catch me up',3331,106,77,0,'Top demand; rarely handed back'],["Who's on call",2010,128,65,0,'High demand, mostly answered'],["What's overdue",895,111,130,0,'Real demand; 1 in 7 handed back'],['Cover my shift',148,50,12,0,'Moderate demand'],['Handover brief',89,15,1,0,'Niche today'],['Draft a retro',55,37,19,0,'35% handed back: no retro write tool on web'],['Set up a SEV1 workflow',11,9,2,0,'New behavior'],['Why was I paged',7,6,1,0,'New behavior'],['Overdue retros by team',5,4,2,0,'New behavior'],['Schedule gaps',4,4,0,0,'New behavior'],['Which alerts page me most',1,1,0,0,'New behavior']];
+const pb=document.querySelector('#prd tbody');
+prd.forEach(r=>{const h=r[3]+r[4];const tr=document.createElement('tr');const rate=h/r[1];
+ tr.innerHTML=`<td>${r[0]}</td><td class="n">${fmt(r[1])}</td><td><span class="bar" style="width:${Math.max(2,140*Math.sqrt(r[1]/3331))}px"></span></td><td class="n">${r[2]}</td><td class="n" style="color:${rate>.1?'var(--bad)':'inherit'}">${h} (${(100*rate).toFixed(1)}%)</td><td style="color:var(--muted)">${r[5]}</td>`;pb.appendChild(tr)});
+
+const man=[['Acknowledge alert',184574,'7d · mobile 65.9k, web 61.5k, Slack 42.1k, voice 12.5k, SMS 2.5k','yes','Yes'],
+['Resolve alert',107611,'7d · web 74.4k, Slack 17.0k, mobile 15.2k, voice 1.0k','yes','Yes'],
+['Resolve incident',11122,'30d · 47.7k web, 4.2k users','flag','Parity flag only'],
+['Create shift override',8052,'30d · 34.5k, all teams','flag','Flag-gated'],
+['Page someone manually',6343,'7d · web 5.0k, Slack 1.4k','flag','Parity flag; web chat: no'],
+['Close incident',3255,'30d · 14.0k web','flag','Parity flag only'],
+['Assign incident role',3084,'30d · 13.2k, 1.9k assigners','flag','Parity flag only'],
+['Mitigate incident',2981,'30d · 12.8k web','flag','Parity flag only'],
+['Request shift cover',2087,'30d · 8.9k, 2.5k requesters','flag','Flag-gated (overrides)'],
+['Cancel incident',2061,'30d · 8.8k web','flag','Parity flag only'],
+['Change incident sub-status',1726,'30d · 7.4k web','flag','Parity flag only'],
+['Snooze alert',1690,'7d · mobile 0.9k, web 0.7k','yes','Yes'],
+['Declare / start incident',1471,'30d · 6.3k web','flag','Parity flag only'],
+['Create action item',1359,'30d · 5.8k, paying teams','yes','Yes'],
+['Close action item',766,'30d · 3.3k, paying teams','yes','Yes'],
+['Send stakeholder communication',63,'30d · 268','flag','Parity flag (status page)']];
+const mb=document.querySelector('#manual tbody');
+man.forEach(r=>{const tr=document.createElement('tr');const cls={yes:'t-yes',flag:'t-flag',no:'t-no'}[r[3]];
+ tr.innerHTML=`<td>${r[0]}${r[3]==='flag'&&r[1]>2000?' <span class="tag t-no">takeover candidate</span>':''}</td><td class="n">${fmt(r[1])}</td><td><span class="bar" style="width:${Math.max(2,160*Math.sqrt(r[1]/184574))}px"></span></td><td style="color:var(--muted)">${r[2]}</td><td><span class="tag ${cls}">${r[4]}</span></td>`;mb.appendChild(tr)});
+
+const fun=[['All customer accounts',1028],['AI enabled',513],['Used the agent at least once',312],['Used it more than once',268]];
+const fc=[['#ddd6fe','#2e1065'],['#c4b5fd','#2e1065'],['#8b5cf6','#ffffff'],['#6d28d9','#ffffff']];
+function drawFunnel(){const W=900,L=220,BW=470,s=svg('funnel',W,fun.length*52+6);fun.forEach((f,i)=>{const w=BW*f[1]/1028,y=6+i*52;
+ txt(s,L-12,y+19,f[0],{'text-anchor':'end',style:'font-weight:600;font-size:12.5px'});
+ txt(s,L-12,y+34,i?`${pct(f[1],fun[i-1][1])} of previous step`:'100%',{'text-anchor':'end',class:'mut'});
+ el('rect',{x:L,y:y+4,width:BW,height:34,rx:8,fill:css('--soft')},s);
+ const b=el('rect',{x:L,y:y+4,width:w,height:34,rx:8,fill:fc[i][0]},s);tip(b,`<b>${f[0]}</b><br>${fmt(f[1])} accounts${i?` · ${pct(f[1],fun[i-1][1])} of previous`:''}`);
+ txt(s,L+BW+12,y+26,`${fmt(f[1])} accounts`,{style:'font-weight:700;font-size:14px'});
+ txt(s,L+BW+120,y+26,`${pct(f[1],1028)} of all`,{class:'mut'})})}
+
+const hist=[['May*',4574,0],['Jun',20722,14],['Jul',20273,42],['Aug',20906,3431],['Sep',33504,7150],['Oct',34987,7846],['Nov*',14753,3327]];
+function drawHist(){const W=900,H=240,L=56,R=20,T=18,B=36,s=svg('hist',W,H);const pw=(W-L-R)/hist.length,mx=40000;
+ [0,10000,20000,30000,40000].forEach(v=>{const y=T+(H-T-B)*(1-v/mx);el('line',{x1:L,x2:W-R,y1:y,y2:y,stroke:css('--grid')},s);txt(s,L-6,y+4,v?(v/1000)+'k':'0',{'text-anchor':'end',class:'mut'})});
+ hist.forEach((d,i)=>{const x=L+i*pw,bw=pw*.34;[[d[1],'--p7',0],[d[2],'--p4',1]].forEach(([v,c,j])=>{const h=Math.max(v?2:0,(H-T-B)*v/mx),bx=x+pw*.14+j*(bw+4);
+  const b=el('rect',{x:bx,y:H-B-h,width:bw,height:h,fill:css(c),rx:3},s);tip(b,`<b>${d[0].replace('*',' (partial)')}</b><br>${fmt(d[1])} sessions<br>${fmt(d[2])} user messages stored`);
+  txt(s,bx+bw/2,H-B-h-5,v>=1000?(v/1000).toFixed(1)+'k':String(v),{'text-anchor':'middle',class:'mut',style:'font-size:10.5px'})});
+  txt(s,x+pw/2,H-B+16,d[0],{'text-anchor':'middle',class:'mut'})})}
+
+const ub=[['0',2251,0],['1',557,557],['2–3',244,555],['4–9',89,494],['10–24',18,250],['25+',6,202]];
+function drawUB(){const s=svg('ubuck',460,30+ub.length*42),L=104,W=230,mx=.75;txt(s,0,14,'Users by number of handbacks',{class:'mut'});
+ ub.forEach((r,i)=>{const y=26+i*42,su=r[1]/3165,sh=r[2]/2058;txt(s,L-8,y+19,r[0]+(r[0]==='1'?' handback':' handbacks'),{'text-anchor':'end'});
+  const a=el('rect',{x:L,y,width:Math.max(2,W*su/mx),height:15,fill:css('--p3'),rx:3},s);const b=el('rect',{x:L,y:y+17,width:Math.max(r[2]?2:0,W*sh/mx),height:15,fill:css('--bad'),rx:3},s);
+  [a,b].forEach(e=>tip(e,`<b>${r[0]} handbacks</b><br>${fmt(r[1])} users (${pct(r[1],3165)})<br>${fmt(r[2])} handbacks (${pct(r[2],2058)})`));
+  txt(s,L+Math.max(2,W*su/mx)+6,y+12,`${pct(r[1],3165)} of users · ${fmt(r[1])}`,{class:'mut',style:'font-size:11px'});if(r[2])txt(s,L+W*sh/mx+6,y+29,`${pct(r[2],2058)} of handbacks`,{class:'mut',style:'font-size:11px'})})}
+
+const ur=[['Other questions',323,86],['Short / greeting / unclear',162,23],['Slack channel & bridge',126,20],['Update incident / roles',123,31],['Summarize / catch me up',118,46],['Investigate / telemetry',81,17],['Shift cover & handover',77,9],['Retro / postmortem',76,11],['Page / escalate',72,14],['Why / root cause',53,16],['Action items',50,12],['Config & admin',43,5]];
+function drawUR(){const s=svg('urep',460,30+ur.length*28),L=170,W=200,mx=330;txt(s,0,14,'Users handed back, by intent',{class:'mut'});
+ ur.forEach((r,i)=>{const y=24+i*28;txt(s,L-8,y+13,r[0],{'text-anchor':'end',style:'font-size:11.5px'});const w2=W*r[2]/mx,w1=W*(r[1]-r[2])/mx;
+  const b=el('rect',{x:L,y,width:w2,height:16,fill:css('--bad'),rx:2},s);const a=el('rect',{x:L+w2,y,width:w1,height:16,fill:css('--p5'),rx:2},s);
+  [a,b].forEach(e=>tip(e,`<b>${r[0]}</b><br>${r[1]} users handed back<br>${r[2]} of them 2+ times (${pct(r[2],r[1])})`));
+  txt(s,L+w1+w2+6,y+13,`${r[1]} · ${r[2]} repeat`,{class:'mut',style:'font-size:11px'})})}
+
+const hm={'Summarize / catch me up':[[869,55],[1792,93],[1964,64],[801,30]],'Other questions':[[624,107],[1151,156],[1285,132],[579,73]],'Update incident / roles':[[431,41],[774,57],[871,63],[433,38]],'Shift cover & handover':[[261,18],[718,33],[781,22],[343,14]],'Short / greeting / unclear':[[262,34],[540,57],[780,82],[406,35]],'Page / escalate':[[144,21],[386,45],[378,19],[134,10]],'Slack channel & bridge':[[150,31],[262,30],[397,75],[157,28]],'Action items':[[114,7],[310,31],[316,24],[105,6]],'Investigate / telemetry':[[131,37],[234,53],[262,36],[104,23]],"Who's on call":[[94,7],[178,3],[191,2],[87,5]],'Why / root cause':[[72,10],[194,41],[133,27],[50,7]],'Status updates & comms':[[56,3],[195,15],[148,11],[49,5]],'Retro / postmortem':[[47,15],[91,35],[141,26],[36,16]],'Config & admin':[[38,4],[97,13],[103,26],[46,6]],'Metrics & reporting':[[36,8],[75,8],[89,10],[36,10]],'Declare incident':[[21,12],[53,13],[47,2],[16,2]],'Tickets (Jira/Linear/SNOW)':[[28,10],[55,17],[29,6],[13,3]]};
+const hmM=['Aug','Sep','Oct','Nov*'];
+function drawHeat(){const rows=Object.keys(hm),L=200,CW=150,RH=24,s=svg('heat',L+CW*4+20,34+rows.length*RH);
+ txt(s,0,14,'Asks and handback rate by intent and month',{class:'mut'});hmM.forEach((m,j)=>txt(s,L+j*CW+CW/2,28,m,{'text-anchor':'middle',class:'mut'}));
+ rows.forEach((k,i)=>{const y=34+i*RH;txt(s,L-8,y+16,k,{'text-anchor':'end',style:'font-size:11.5px'});
+  hm[k].forEach((c,j)=>{const r=c[1]/c[0],[bg,fg]=r<.05?['#ddd6fe','#2e1065']:r<.10?['#a78bfa','#1d1530']:r<.20?['#6d28d9','#ffffff']:['#d6336c','#ffffff'];
+   const g=el('g',{},s);el('rect',{x:L+j*CW+1,y:y+1,width:CW-2,height:RH-2,rx:4,fill:bg},g);
+   txt(g,L+j*CW+CW/2,y+16,`${fmt(c[0])} · ${(100*r).toFixed(0)}%`,{'text-anchor':'middle',style:`fill:${fg};font-size:11px`});
+   tip(g,`<b>${k}</b> · ${hmM[j].replace('*',' (partial)')}<br>${fmt(c[0])} asks<br>${c[1]} handed back (${pct(c[1],c[0])})`)})})}
+
+const cov=[['Summarize / catch me up',5429,243,98,'incident_summary, tool_summarize_incident'],['Update incident / roles',2509,199,74,'tool_update_incident, tool_update_incident_roles'],['Shift cover & handover',2104,87,0,'none (on-call and schedule reads only)'],['Page / escalate',1041,95,44,'tool_request_page, tool_list_escalation_policies'],['Slack channel & bridge',966,164,0,'none'],['Action items',845,68,98,'create / list / update action item'],['Investigate / telemetry',731,149,64,'incident timeline, alerts, incident alerts'],["Who's on call",552,17,23,'tool_get_on_call'],['Why / root cause',449,85,0,'none'],['Status updates & comms',448,34,32,'incident_status_message, tool_update_status_page_status'],['Retro / postmortem',315,92,15,'tool_update_incident_retrospective'],['Config & admin',284,49,0,'none (config reads only)'],['Metrics & reporting',237,36,0,'none'],['Declare incident',138,29,0,'none (no create-incident scenario)'],['Tickets (Jira/Linear/SNOW)',125,36,0,'none']];
+function drawCov(){const s=svg('cov',900,34+cov.length*28),L=200,W=380,mx=100;
+ txt(s,L,14,'Golden-set cases per intent (latest run)',{class:'mut'});txt(s,L+W+30,14,'Demand, 6 mo',{class:'mut'});
+ cov.forEach((r,i)=>{const y=24+i*28;txt(s,L-8,y+14,r[0],{'text-anchor':'end',style:'font-size:11.5px'});
+  let b;if(r[3]){b=el('rect',{x:L,y:y+1,width:W*r[3]/mx,height:17,rx:3,fill:css('--p5')},s);txt(s,L+W*r[3]/mx+6,y+14,String(r[3]),{class:'mut'})}
+  else{b=el('rect',{x:L,y:y+1,width:W,height:17,rx:3,fill:'none',stroke:css('--bad'),'stroke-dasharray':'4 3'},s);txt(s,L+8,y+14,'no eval cases',{style:`fill:${css('--bad')};font-size:11px;font-weight:600`})}
+  tip(b,`<b>${r[0]}</b><br>${r[3]} golden-set cases<br>${r[4]}<br>${fmt(r[1])} asks · ${r[2]} handed back (${pct(r[2],r[1])})`);
+  const rate=r[2]/r[1];txt(s,L+W+30,y+14,`${fmt(r[1])} asks · `,{class:'mut'});txt(s,L+W+30+(fmt(r[1]).length+8)*6.6,y+14,`${(100*rate).toFixed(1)}% back`,{style:`font-weight:600;fill:${rate>.15?css('--bad'):css('--ink')}`})})}
+
+function all(){drawTier();drawTrend();drawHist();drawSurf();drawLat();drawUB();drawUR();drawTree();drawDefl();drawHeat();drawCov();drawFunnel()}
+all();
+new MutationObserver(all).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all)}catch(e){}
+})();
+</script>

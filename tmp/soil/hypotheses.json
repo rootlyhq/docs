@@ -1,0 +1,60 @@
+[
+  {
+    "id": "h2",
+    "hypothesis": "Web incident chat refuses incident updates, paging and retros (33%/40%/60%) because that surface is deliberately read-only: write tools are filtered out of the surface's tool set (ai_allowed_tools / surface config) and the system prompt tells the model to say web is read-only.",
+    "status": "validated",
+    "evidence": "app/services/ai/features/web_chat.rb#resolve_tools: `tools = Registry.for_context(**base).select { |tool| READ_ONLY_TOOLS.include?(tool.class) }`; write tools are added only `if @kwargs[:tool_access]&.to_sym == :home_write`. app/controllers/account/ai/chat/stream_controller.rb:36: `tool_access = :home_write if session.incident_chat? && home_write_enabled?`. home_write_enabled? calls HomeAiChatGating.enabled?, which requires user.theme == 'light_v2', the 'ai-native-home' flag and an IR or on-call seat. config/ai/prompts/web_chat.yml: 'Most users only have read-only tools: you can answer questions and look things up, but you cannot take mutating actions (paging, editing the incident, etc.). If the user asks for an action you have no tool for, say so plainly in one sentence'. HomeWriteAllowlist::WRITE_TOOLS contains no incident update, RequestPage or retro write tool, and parity_write_surface? limits incident-update parity writes to home_chat/dashboard_chat sessions. Differences from the hypothesis: the filter is the hardcoded READ_ONLY_TOOLS constant, not ai_allowed_tools; the read-only state is per user, not surface-wide; the prompt says 'most users only have read-only tools', not 'web is read-only'.",
+    "confidence": "medium",
+    "leads": [
+      "Metabase Main DB: join ai_sessions (web incident chat) to users and teams, and check what share of refused sessions come from users without light_v2/ai-native-home/seat (no home_write) versus users with it. If most refusals are from home_write-enabled users, the allowlist gap is the main cause rather than the gating.",
+      "Metabase: ai_tool_call_events for web incident chat sessions since 2026-10-29. If the model never calls paging/update-incident/retro tools, it confirms those tools are not offered, as opposed to being denied at call time. A non-zero denied/permission_denied outcome for them would weaken this.",
+      "Re-sample the web-chat refusal messages and check whether the wording says the surface is read-only or that no tool exists. This would show which prompt line drives the replies."
+    ]
+  },
+  {
+    "id": "h3",
+    "hypothesis": "Incident-update refusals (the top category, 34 teams) come mainly from the enable_ai_assistant_required_fields_v2 LaunchDarkly flag being off for most paying teams, which keeps the incident update tool out of the agent's tool set.",
+    "status": "invalidated",
+    "evidence": "Re-investigated 2026-11-12 in Metabase Main DB. flipper_gates for enable_ai_assistant_required_fields_v2 has only 9 'actors' rows and no boolean, group or percentage gate, so the flag is off for almost every paying team. But the flag only scopes home/dashboard chat, and those surfaces carry almost no volume (home chat ~67 sessions, 2 teams). Of 1,994 handed-back asks in 90 days, 1,472 are on Slack and 432 on web incident chat, where the flag does not gate UpdateIncident. The flag being off is real but cannot explain the refusals measured. Original code evidence: home_write_allowlist.rb: `def self.parity_writes?(team) = team.present? && Flipper.enabled?(:enable_ai_assistant_required_fields_v2, team)`; tools() adds parity_write_tools only when true; UpdateIncident has `home_chat_write` (update_incident.rb:31) but is NOT in WRITE_TOOLS, so with flag off it is absent from home chat tool set (registry.rb:152 :home_write branch). Scope is home/dashboard/API-home only (docs/ai/adding-tools.md:164). feature_flags.yaml:1511: when flag off, UpdateIncident 'falls back to today's direct-save behavior', so the tool is still offered on Slack/incident surfaces. Web incident chat refusals come from tool_access :read_only -> ReadOnlyAllowlist (registry.rb:152), independent of the flag. base.rb ~L855 comment: on 2026-09-17 prod flipper_gates had only 5 actors rows (internal/test teams 1, 2187, 2243, 4060, 4460), no boolean/group/percentage gate, so the flag is likely off for paying teams on home chat (but it is a dated code comment, not current state).",
+    "confidence": "medium",
+    "leads": [
+      "Production Flipper gates: run `SELECT feature_key, key, value FROM flipper_gates WHERE feature_key='enable_ai_assistant_required_fields_v2'` (Main DB via Metabase, or the LaunchDarkly/Flipper admin). A boolean/percentage gate covering paying teams would weaken h3; only a handful of actors rows confirms the flag is off for them.",
+      "Per-surface split of update-incident refusals: in Metabase on ai_sessions joined to ai_session_messages (the lane's 90-day paying-team classification), group the 34 refusing teams by ai_sessions surface (home/dashboard vs web incident vs Slack/mobile/Teams/GChat). If most teams' refusals are on home chat, h3 is validated. If most are on web incident chat (read-only) or Slack, h3 is invalidated.",
+      "Refusal reply text for home-chat update-incident refusals: check whether they say the agent has no tool for it (flag off) or cite read-only web (ReadOnlyAllowlist). This separates the flag cause from the read-only cause."
+    ]
+  },
+  {
+    "id": "h6",
+    "hypothesis": "For Nour's 3-tier KR, today's Rootly Agent already lands most asks in Tier 1. Tier 3 (handed back) is concentrated on web, and Tier 2 (docs/self-serve) is close to empty. The homepage target should therefore be set from web's gap to Slack, not from the overall rate.",
+    "status": "validated",
+    "evidence": "Metabase Main DB (id 2), paying non-sandbox teams, ai_sessions created in the last 180d (2026-05-16 to 2026-11-12), excluding ai_sre_memory/automation/admin_kg. WINDOW: about 150k chat sessions exist since May (20k+/month from June), but ai_session_messages holds message text only from 2026-08-02 (14 user messages in June, 42 in July), so every ask-level figure covers Aug 2 - Nov 12. Each user message is paired with the last non-JSON assistant message in its turn (about 70% of assistant rows are JSON tool-call records). 21,810 user messages: Tier 1 = 19,587 (89.8%), Tier 2 = 165 (0.76%), Tier 3 = 2,058 (9.4%). By surface, Tier 3 is Slack 1,523/16,989 (9.0%), web 445/1,611 (27.6%), mobile 73/3,011 (2.4%). Time to final reply p50/p95: all 8.8s/37.2s, Slack 9.3s/41.4s, web 8.4s/36.2s, mobile 6.9s/17.3s. Weekly Tier 3 rate: 10-14% through Sep 14, 3.4-4.9% for the weeks of Sep 21 to Oct 5, 8-10% from Oct 12. Intents (keyword rules, 6 mo): summarize 5,429 asks (4.5% handed back), update incident 2,509 (7.9%), shift cover 2,104 (4.1%), page 1,041 (9.1%), Slack channel 966 (17.0%), investigate 731 (20.4%), why/RCA 449 (18.9%), retro 315 (29.2%), config 284 (17.3%), declare 138 (21.0%), tickets 125 (28.8%). By month: declare went from 57% handed back in August to 4% in October, paging from 15% to 5%, while Slack channel (19% in Oct), retro (18-44%) and tickets stayed high. PRD prompts (6 mo): catch me up 3,331 (2.3% back), who's on call 2,010 (3.2%), what's overdue 895 (14.5%); five prompts have 11 or fewer asks. Correction proxy 48 of 2,112 follow-ups; feedback_sentiment null everywhere, so Tier 1 is an upper bound. Published: https://claude.ai/code/artifact/5703be40-69c9-43c3-bd5d-c303fa9781a8 (source tmp/soil/artifact/agent-signal.html).",
+    "confidence": "medium",
+    "leads": [
+      "Homepage traffic by persona: ahoy_events has 0 rows in the last 30 days, so the PRD's 27.8k views / 23% of active users still needs its source (likely the warehouse/Segment).",
+      "Add a resolution signal (feedback or a re-ask heuristic) so Tier 1 can be measured, not just bounded.",
+      "Braintrust: metadata (projects, experiments) is readable; sql_query, infer_schema, summarize_experiment and get_project_settings are refused by the lane hook as not read-only, so golden-set pass rates and trace-level data are still missing."
+    ]
+  },
+  {
+    "id": "h7",
+    "hypothesis": "Handbacks are concentrated in a few heavy users or teams, so the KR gap is a handful of accounts rather than a product capability gap.",
+    "status": "invalidated",
+    "evidence": "Per-user split over the same 21,810 asks (Aug 2 - Nov 12): 914 of 3,165 users (29%) were handed back at least once, on 205 teams. 557 users were handed back exactly once; the top 10 users hold 13.6% of handbacks (279/2,058) and the top 50 hold 31%. The top 10 teams hold 42.5% of handbacks but also 43% of asks, and their handback rate (875/9,389 = 9.3%) matches every other team's (1,183/12,421 = 9.5%). So handbacks track volume, not specific accounts. There is a repeat tail: 208 users were handed back on the same intent two or more times, which is 948 handbacks (46% of all). Repeats cluster in summarize (46 users, 42 across sessions), update incident (31), Slack channel (20) and investigate (17).",
+    "confidence": "high",
+    "leads": [
+      "Use the 948 repeat handbacks as the seed for the hard-question eval set JJ suggested."
+    ]
+  },
+  {
+    "id": "h8",
+    "hypothesis": "The agent's Braintrust golden-set eval tests its tools, not the questions users get handed back on, so offline evals can't see the KR gap.",
+    "status": "validated",
+    "evidence": "Braintrust metadata (list_recent_objects): the rootly-evals project runs a golden set of 38 scenarios and 894 cases (one trial each) on 9 synthetic incidents (easy/medium/hard) in env:test, about twice a day; latest run 20261111T000354Z. Scenarios are per tool (e.g. tool_request_page 22 cases, tool_update_incident 37, tool_update_incident_roles 37, tool_update_incident_retrospective 15, tool_summarize_incident 51, incident_summary 47). Mapped to user intents by name, 7 intents have zero cases: Slack channel and bridge, declare incident, tickets, config/admin writes, metrics, root-cause questions and shift cover. Together they hold 4,303 of 21,810 asks (19.7%) and 486 of 2,058 handbacks (23.6%). Paging, incident updates and retros are tested in env:test, but production web chat doesn't expose those tools, which is the h2 mechanism behind web's 27.6%. rootly-prod-agent (created 2026-09-18, three days before the Sep 21 handback dip) has no patterns, automations, monitoring views, datasets or experiments. Scores couldn't be read: summarize_experiment and sql_query are refused by the lane hook.",
+    "confidence": "medium",
+    "leads": [
+      "Add golden-set scenarios per in-scope homepage intent and per surface (web read-only vs Slack) so the KR has an offline measure.",
+      "Once Braintrust reads are on: read golden-set pass rates per scenario and compare with production handback rates per intent.",
+      "Check whether the agent runtime changed around 2026-09-18 (Braintrust prod tracing start) and explains the Sep 21 - Oct 5 dip."
+    ]
+  }
+]
